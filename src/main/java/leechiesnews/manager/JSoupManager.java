@@ -1,4 +1,4 @@
-package leechiesnews;
+package leechiesnews.manager;
 
 import java.io.IOException;
 
@@ -7,7 +7,7 @@ import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JSoupUtils {
+public class JSoupManager {
 	final static Logger logger = LoggerFactory.getLogger("JSoupUtils");
 
 	public static synchronized Document getDocumentFromUrl(String url) {

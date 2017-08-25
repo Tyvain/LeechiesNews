@@ -1,0 +1,9 @@
+- !leechiesnews.model.WebSite
+  url: http://www.cryptocoinsnews.com/news
+  cleanerClass: leechiesnews.cleaner.CryptocoinsnewsCleaner  
+  author: cryptopress  
+  linkSelector: h3 > a[rel]:not([href~=hacked])
+  titleSelector: h1.entry-title
+  textSelector: '#primary'
+  imgUrlSelector: div.site-header-bg
+  tagSelector: li.meta-cat > a

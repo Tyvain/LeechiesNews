@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jsoup.nodes.Document;
@@ -16,6 +17,9 @@ import org.slf4j.LoggerFactory;
 
 import com.esotericsoftware.yamlbeans.YamlReader;
 
+import leechiesnews.cleaner.Cleaner;
+import leechiesnews.manager.DBManager;
+import leechiesnews.manager.JSoupManager;
 import leechiesnews.model.News;
 import leechiesnews.model.WebSite;
 
@@ -32,11 +36,11 @@ public class App {
 	public static Instant start = Instant.now();
 	public static Duration duration;
 
-	public static String ALL_SOURCES[] = { "cryptopress.yml" };
+	public static String ALL_SOURCES[] = { "cryptocoinsnews.yml" };
 	public static String SOURCES[] = ALL_SOURCES;
 
 	// # !!!
-	private static boolean RESET_DB = false; // reset local DB (backup old one)
+	private static boolean RESET_DB = true; // reset local DB (backup old one)
 	// # !!!
 
 	public static void main(String[] args) {
@@ -75,9 +79,21 @@ public class App {
 		App.getSourceStream().flatMap(s -> {
 			return getNewsFromSource(s);
 		}).forEach(a -> {
+			cleanNews(a);			
 			DBManager.saveNews(a);
+			//System.exit(0);
 		});
 		logger.info("... goLeech finished!");
+	}
+
+	private static void cleanNews(News a) {
+		try {
+			Class<?> clazz = Class.forName(a.cleanerClass);
+			Cleaner cleaner = (Cleaner) clazz.newInstance();
+			cleaner.clean(a);
+		} catch (Exception e) {
+			logger.error("boum: " +e);
+		}
 	}
 
 	public static void logStats(String m) {
@@ -93,17 +109,13 @@ public class App {
 	}
 
 	private static Stream<News> getNewsFromSource(WebSite source) {
-		logger.info("-url: " + source.url + " -linkSelector: " + source.linkSelector + " -titleSelector: " + source.titleSelector + " -textSelector: " + source.textSelector);
-		Document doc = JSoupUtils.getDocumentFromUrl(source.url);
+		logger.debug("-url: " + source.url + " -linkSelector: " + source.linkSelector + " -titleSelector: " + source.titleSelector + " -textSelector: " + source.textSelector);
+		Document doc = JSoupManager.getDocumentFromUrl(source.url);
+		//logger.debug("doc: " + doc.outerHtml()); 
 		Elements elemz = doc.select(source.linkSelector);
 		Stream<String> urlz = elemz.stream().map(e -> e.attr("href"));
 		Stream<News> newz = urlz.map(u -> getNewsFromUrl(u, source));
-
-		newz.forEach(n -> {
-			logger.info("n : " + n);
-		});
-
-		return null;
+		return newz;
 	}
 
 	private static News getNewsFromUrl(String url, WebSite source) {
@@ -111,12 +123,16 @@ public class App {
 			App.statNbAnnoncesAlreadyInDB++;
 			return DBManager.getNewsByUrl(url);
 		}
-		Document doc = JSoupUtils.getDocumentFromUrl(url);
+		Document doc = JSoupManager.getDocumentFromUrl(url);
 		App.statNbNotAlreadyInDB++;
 		News ret = new News();
 		ret.url = url;
 		ret.titre = doc.select(source.titleSelector).text();
-		ret.text = doc.select(source.textSelector).text();
+		ret.text = doc.select(source.textSelector).outerHtml();
+		ret.imgUrl = doc.select(source.imgUrlSelector).outerHtml();		
+		Elements elTagz = doc.select(source.tagSelector);
+		ret.tags = elTagz.stream().map(e -> e.text()).collect(Collectors.toList());
+		logger.debug("ret : " + ret);		
 		return ret;
 	}
 
@@ -126,7 +142,7 @@ public class App {
 			for (String source : SOURCES) {
 				ClassLoader classLoader = App.class.getClassLoader();
 				File file = new File(classLoader.getResource(source).getFile());
-				logger.info("file : " + file);
+				logger.debug("file : " + file);
 				YamlReader reader = new YamlReader(new FileReader(file));
 
 				@SuppressWarnings("unchecked")

@@ -1,5 +1,0 @@
-- !leechiesnews.model.WebSite
-  url: http://www.cryptocoinsnews.com/news
-  linkSelector: h3.entry-title > a
-  titleSelector: h1.entry-title
-  textSelector: '#primary'

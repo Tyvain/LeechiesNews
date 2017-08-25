@@ -1,4 +1,4 @@
-package leechiesnews;
+package leechiesnews.manager;
 
 import java.io.File;
 import java.io.FileInputStream;
