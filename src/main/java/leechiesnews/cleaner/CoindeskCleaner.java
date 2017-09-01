@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import leechiesnews.model.News;
 
-public class CryptocoinsnewsCleaner extends Cleaner {
+public class CoindeskCleaner extends Cleaner {
 
 	@Override
 	public void clean(News in) {
@@ -16,8 +16,8 @@ public class CryptocoinsnewsCleaner extends Cleaner {
 		in.cleanTitle = in.title;
 
 		// clean text
-		in.cleanText = selectOut(in.text, "html");
-		in.cleanText = removeAll(in.cleanText, "em", "aside", "script", ".author-profile-links", ".author-profile", ".mobile", ".showmobile", ".wp-caption-text", ".entry-meta", ".share-comment.click", ".dcl-disqus-thread");
+		in.cleanText = selectOut(in.text, "p");
+		in.cleanText = remove(in.cleanText, "em");
 		in.cleanText = selectIn(in.cleanText, "body");
 
 		// clean tags
@@ -46,10 +46,7 @@ public class CryptocoinsnewsCleaner extends Cleaner {
 			in.cleanImgUrl = urlMatcher.group(0);
 		}
 
-		// Ajout image
-		in.cleanText = in.cleanImgUrl + "\n" + in.cleanText;
-		
-		// Ajout source		
+		// Ajout source
 		in.cleanText += "\n Source : " + in.url;
 	}
 }

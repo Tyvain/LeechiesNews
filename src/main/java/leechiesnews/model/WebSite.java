@@ -8,4 +8,7 @@ public class WebSite {
 	public String textSelector;
 	public String imgUrlSelector;
 	public String tagSelector;
+	public String cleanerClass;
+	public String postKey;
+	public String activeKey;
 }

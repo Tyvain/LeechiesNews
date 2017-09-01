@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -20,6 +21,7 @@ import com.esotericsoftware.yamlbeans.YamlReader;
 import leechiesnews.cleaner.Cleaner;
 import leechiesnews.manager.DBManager;
 import leechiesnews.manager.JSoupManager;
+import leechiesnews.manager.SteemManager;
 import leechiesnews.model.News;
 import leechiesnews.model.WebSite;
 
@@ -40,7 +42,7 @@ public class App {
 	public static String SOURCES[] = ALL_SOURCES;
 
 	// # !!!
-	private static boolean RESET_DB = true; // reset local DB (backup old one)
+	private static boolean RESET_DB = false; // reset local DB (backup old one)
 	// # !!!
 
 	public static void main(String[] args) {
@@ -79,9 +81,14 @@ public class App {
 		App.getSourceStream().flatMap(s -> {
 			return getNewsFromSource(s);
 		}).forEach(a -> {
-			cleanNews(a);			
-			DBManager.saveNews(a);
-			//System.exit(0);
+			cleanNews(a);
+			if (!a.uploaded) {
+				SteemManager.uploadNews(a);
+				a.uploaded = true;
+				a.uploadedTime = new Date();
+				DBManager.saveNews(a);	
+				System.exit(0);
+			}			
 		});
 		logger.info("... goLeech finished!");
 	}
@@ -127,12 +134,15 @@ public class App {
 		App.statNbNotAlreadyInDB++;
 		News ret = new News();
 		ret.url = url;
-		ret.titre = doc.select(source.titleSelector).text();
+		ret.title = doc.select(source.titleSelector).text();
 		ret.text = doc.select(source.textSelector).outerHtml();
 		ret.imgUrl = doc.select(source.imgUrlSelector).outerHtml();		
+		ret.cleanerClass = source.cleanerClass;
+		ret.postKey = source.postKey;
+		ret.activeKey = source.activeKey;
+		ret.author = source.author;
 		Elements elTagz = doc.select(source.tagSelector);
 		ret.tags = elTagz.stream().map(e -> e.text()).collect(Collectors.toList());
-		logger.debug("ret : " + ret);		
 		return ret;
 	}
 

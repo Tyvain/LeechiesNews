@@ -12,17 +12,30 @@ public class News implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	public String url; // key unique
-	public String cleanerClass;
-	public String titre;
+	public String cleanUrl;		
+	
+	public String title;
+	public String cleanTitle;
+		
 	public String text;
+	public String cleanText;
+	
 	public List<String> tags;
+	public List<String> cleanTags = new ArrayList<String>();
+		
 	public String imgUrl;
+	public String cleanImgUrl;
+	
 	public boolean uploaded;
 	public Date uploadedTime=null; // date d'envoi sur steem
 	public boolean hasError=false;
 	public String error="";
-	public String cleanText;
-	public List<String> cleanTags = new ArrayList<String>();
+	public String cleanerClass;
+	
+	public String author;
+	public String postKey;
+	public String activeKey;
+		
 		
 	@Override
 	public boolean equals(Object o) {
@@ -37,7 +50,7 @@ public class News implements Serializable {
 	@Override
 	public String toString() {
 		String ret = "\nurl : "+ url;
-		ret += "\ntitre : "+ titre;
+		ret += "\ntitre : "+ title;
 		ret += "\ntexte : "+ StringUtils.substring(text, 0, 20) + "...";
 		ret += "\nuploadedTime : "+ uploadedTime;
 		ret += "\nuhasError : "+ hasError;
